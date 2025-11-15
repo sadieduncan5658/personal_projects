@@ -40,47 +40,46 @@ For copy on select: in settings.json, add ```"copyOnSelect" = true```
 
 **All Keyboard Shortcuts:**
 - [**📄 View PDF**](./VScode_Keyboard_Shortcuts.pdf)
-- [Preview the PDF](./VScode_Keyboard_Shortcuts.pdf)
 
 **VS Code Global Commands**
-| Action | Windows / Linux | macOS |
-| ------ | --------------- | ----- |
-| Open command palette | Ctrl + Shift + P | Cmd + Shift + P |
-| Quick open files | Ctrl + P | Cmd + P |
-| Search in file | Ctrl + F | Cmd + F |
-| Search across files | Ctrl + Shift + F | Cmd + Shift + F |
-| Go to symbol (workspace) | Ctrl + T | Cmd + T |
-| Go to symbol (file) | Ctrl + Shift + O | Cmd + Shift + O |
-| Open settings | Ctrl + , | Cmd + , |
-| Command suggestions / IntelliSense | Ctrl + Space | Ctrl + Space |
-| Toggle Zen Mode | Ctrl + K, Z | Cmd + K, Z |
+| Action                             | Windows / Linux  | macOS           |
+| ---------------------------------- | ---------------- | --------------- |
+| Open command palette               | Ctrl + Shift + P | Cmd + Shift + P |
+| Quick open files                   | Ctrl + P         | Cmd + P         |
+| Search in file                     | Ctrl + F         | Cmd + F         |
+| Search across files                | Ctrl + Shift + F | Cmd + Shift + F |
+| Go to symbol (workspace)           | Ctrl + T         | Cmd + T         |
+| Go to symbol (file)                | Ctrl + Shift + O | Cmd + Shift + O |
+| Open settings                      | Ctrl + ,         | Cmd + ,         |
+| Command suggestions / IntelliSense | Ctrl + Space     | Ctrl + Space    |
+| Toggle Zen Mode                    | Ctrl + K, Z      | Cmd + K, Z      |
 
 **VS Code Window / Tab / Pane Movement**
-| Action | Windows / Linux | macOS |
-| ------ | --------------- | ----- |
-| Toggle sidebar | Ctrl + B | Cmd + B |
-| Focus sidebar/editor | Ctrl + 0 / 1 | Cmd + 0 / 1 |
-| Move between editor groups | Ctrl + K + ←/→ | Cmd + K + ←/→ |
-| Split editor | Ctrl + \ | Cmd + \ |
-| Close editor | Ctrl + W | Cmd + W |
-| Reopen closed editor | Ctrl + Shift + T | Cmd + Shift + T |
-| Cycle tabs | Ctrl + Tab | Cmd + Option + → |
-| Cycle tabs backward | Ctrl + Shift + Tab | Cmd + Option + ← |
-| Move editor left/right | Ctrl + Shift + PgUp/PgDn | Cmd + Shift + Option + ←/→ |
+| Action                     | Windows / Linux          | macOS                      |
+| -------------------------- | ------------------------ | -------------------------- |
+| Toggle sidebar             | Ctrl + B                 | Cmd + B                    |
+| Focus sidebar/editor       | Ctrl + 0 / 1             | Cmd + 0 / 1                |
+| Move between editor groups | Ctrl + K + ←/→           | Cmd + K + ←/→              |
+| Split editor               | Ctrl + \                 | Cmd + \                    |
+| Close editor               | Ctrl + W                 | Cmd + W                    |
+| Reopen closed editor       | Ctrl + Shift + T         | Cmd + Shift + T            |
+| Cycle tabs                 | Ctrl + Tab               | Cmd + Option + →           |
+| Cycle tabs backward        | Ctrl + Shift + Tab       | Cmd + Option + ←           |
+| Move editor left/right     | Ctrl + Shift + PgUp/PgDn | Cmd + Shift + Option + ←/→ |
 
 **VS Code Editing Code**
-| Action | Windows / Linux | macOS |
-| ------ | --------------- | ----- |
-| Move line up/down | Alt + ↑/↓ | Option + ↑/↓ |
-| Duplicate line | Alt + Shift + ↑/↓ | Option + Shift + ↑/↓ |
-| Toggle line comment | Ctrl + / | Cmd + / |
-| Toggle block comment | Shift + Alt + A | Shift + Option + A |
-| Rename symbol | F2 | F2 |
-| Format document | Shift + Alt + F | Shift + Option + F |
-| Select next occurrence | Ctrl + D | Cmd + D |
-| Select all occurrences | Ctrl + Shift + L | Cmd + Shift + L |
-| Expand selection | Shift + Alt + → | Shift + Option + → |
-| Shrink selection | Shift + Alt + ← | Shift + Option + ← |
+| Action                 | Windows / Linux   | macOS                |
+| ---------------------- | ----------------- | -------------------- |
+| Move line up/down      | Alt + ↑/↓         | Option + ↑/↓         |
+| Duplicate line         | Alt + Shift + ↑/↓ | Option + Shift + ↑/↓ |
+| Toggle line comment    | Ctrl + /          | Cmd + /              |
+| Toggle block comment   | Shift + Alt + A   | Shift + Option + A   |
+| Rename symbol          | F2                | F2                   |
+| Format document        | Shift + Alt + F   | Shift + Option + F   |
+| Select next occurrence | Ctrl + D          | Cmd + D              |
+| Select all occurrences | Ctrl + Shift + L  | Cmd + Shift + L      |
+| Expand selection       | Shift + Alt + →   | Shift + Option + →   |
+| Shrink selection       | Shift + Alt + ←   | Shift + Option + ←   |
 
 **VS Code Terminal Controls**
 | Action                 | Windows / Linux  | macOS               |
