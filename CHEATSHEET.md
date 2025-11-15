@@ -2,10 +2,6 @@
 ## Table of Contents
 - [Terminal Commands](#Terminal-Commands)
 - [VS Code Commands](#VS-Code-Commands)
-    - [VS Code Global Commands](#VS-Code-Global-Commands)
-    - [VS Code Window / Tab / Pane Movement](#VS-Code-Window-/-Tab-/-Pane-Movement)
-    - [VS Code Editing Code](#VS-Code-Editing-Code)
-    - [VS Code Terminal Controls](#VS-Code-Terminal-Controls)
 - [Git Commands](#Git-Commands)
 
 ---
@@ -43,14 +39,8 @@ For copy on select: in settings.json, add ```"copyOnSelect" = true```
 [Back to Top](#Keyboard-Shortcuts)
 
 **All Keyboard Shortcuts:**
-- [**📄 View PDF**](./VScode_Keyboard_Shortcuts.pdf.pdf)
-- [Preview the PDF](./VScode_Keyboard_Shortcuts.pdf.pdf)
-
-**Navigator:**
-- [VS Code Global Commands](#VS-Code-Global-Commands)
-- [VS Code Window / Tab / Pane Movement](#VS-Code-Window-/-Tab-/-Pane-Movement)
-- [VS Code Editing Code](#VS-Code-Editing-Code)
-- [VS Code Terminal Controls](#VS-Code-Terminal-Controls)
+- [**📄 View PDF**](./VScode_Keyboard_Shortcuts.pdf)
+- [Preview the PDF](./VScode_Keyboard_Shortcuts.pdf)
 
 **VS Code Global Commands**
 | Action | Windows / Linux | macOS |
