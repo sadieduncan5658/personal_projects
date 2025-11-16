@@ -1,0 +1,2157 @@
+# F1 Hub Calendar - Technical Specification Document
+
+**Version:** 1.0  
+**Date:** November 15, 2024  
+**Target Stack:** React/TypeScript Frontend, Java Spring Boot Backend  
+**Theme:** Classic Racing
+
+---
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Technology Stack](#technology-stack)
+3. [Design System](#design-system)
+4. [Component Architecture](#component-architecture)
+5. [Layout Specifications](#layout-specifications)
+6. [Data Models](#data-models)
+7. [API Endpoints](#api-endpoints)
+8. [State Management](#state-management)
+9. [Responsive Behavior](#responsive-behavior)
+10. [Interactions & Animations](#interactions--animations)
+
+---
+
+## 1. Overview
+
+The F1 Hub Calendar page displays the complete 2024 Formula 1 season schedule, featuring:
+- Visual 52-week season timeline
+- Collapsible next race hero section with country-themed gradient
+- Detailed race information with timezone conversions
+- Complete season results table
+- Upcoming races list with break indicators
+
+---
+
+## 2. Technology Stack
+
+### Frontend
+- **Framework:** React 18+ with TypeScript 5+
+- **Build Tool:** Vite or Next.js
+- **Styling:** Tailwind CSS 3.4+
+- **Icons:** Lucide React
+- **Charts:** Recharts (for future statistics pages)
+- **Date/Time:** date-fns or dayjs for timezone handling
+
+### Backend
+- **Framework:** Java 21 + Spring Boot 3.2+
+- **Database:** PostgreSQL 15+ or MySQL 8+
+- **API:** RESTful with Spring Web
+- **Caching:** Redis for race data
+- **Timezone:** java.time.ZonedDateTime
+
+---
+
+## 3. Design System
+
+### 3.1 Color Palette (Classic Racing Theme)
+
+```typescript
+// colors.ts
+export const colors = {
+  // Background
+  primary: {
+    bg: 'linear-gradient(135deg, #1f2937 0%, #111827 50%, #1f2937 100%)',
+    cardBg: 'linear-gradient(135deg, rgba(161, 98, 7, 0.2) 0%, #1f2937 100%)',
+  },
+  
+  // Accents
+  accent: {
+    yellow: '#eab308',      // Primary yellow
+    yellowDark: '#a16207',  // Darker yellow for borders
+    yellowLight: '#fef08a', // Light yellow for secondary text
+  },
+  
+  // Status Colors
+  status: {
+    completed: '#16a34a',   // Green for completed races
+    upcoming: '#eab308',    // Yellow for upcoming races
+    break: '#4b5563',       // Gray for breaks
+    summer: '#ea580c',      // Orange for summer break
+    winter: '#1e3a8a',      // Blue for winter break
+  },
+  
+  // Text
+  text: {
+    primary: '#ffffff',
+    secondary: '#fef08a',   // Yellow tint for secondary
+    tertiary: '#9ca3af',
+  },
+  
+  // Borders
+  border: {
+    primary: 'rgba(161, 98, 7, 0.5)',
+    accent: '#eab308',
+  },
+  
+  // USA Flag Gradient (Next Race)
+  usaGradient: {
+    bg: 'linear-gradient(135deg, #1e3a8a 0%, #991b1b 50%, #1e3a8a 100%)',
+    overlay: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(220, 38, 38, 0.1) 20px, rgba(220, 38, 38, 0.1) 40px)',
+  }
+};
+```
+
+### 3.2 Typography
+
+```typescript
+// typography.ts
+export const typography = {
+  fontFamily: {
+    base: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  },
+  
+  fontSize: {
+    xs: '0.625rem',    // 10px
+    sm: '0.75rem',     // 12px
+    base: '0.875rem',  // 14px
+    lg: '1rem',        // 16px
+    xl: '1.25rem',     // 20px
+    '2xl': '1.5rem',   // 24px
+    '3xl': '1.875rem', // 30px
+    '4xl': '2.25rem',  // 36px
+    '5xl': '3rem',     // 48px
+    '6xl': '3.75rem',  // 60px
+  },
+  
+  fontWeight: {
+    normal: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700,
+    black: 900,
+  },
+  
+  lineHeight: {
+    tight: 1.25,
+    normal: 1.5,
+    relaxed: 1.75,
+  }
+};
+```
+
+### 3.3 Spacing Scale
+
+```typescript
+// spacing.ts
+export const spacing = {
+  xs: '0.25rem',   // 4px
+  sm: '0.5rem',    // 8px
+  md: '0.75rem',   // 12px
+  lg: '1rem',      // 16px
+  xl: '1.5rem',    // 24px
+  '2xl': '2rem',   // 32px
+  '3xl': '3rem',   // 48px
+};
+```
+
+### 3.4 Border Radius
+
+```typescript
+// borderRadius.ts
+export const borderRadius = {
+  sm: '0.375rem',  // 6px
+  md: '0.5rem',    // 8px
+  lg: '0.75rem',   // 12px
+  xl: '1rem',      // 16px
+  '2xl': '1.5rem', // 24px
+  '3xl': '1.875rem', // 30px
+};
+```
+
+### 3.5 Shadows
+
+```typescript
+// shadows.ts
+export const shadows = {
+  sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+  md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+  xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+  '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+};
+```
+
+---
+
+## 4. Component Architecture
+
+### 4.1 Component Tree
+
+```
+CalendarPage (Container)
+├── PageHeader
+├── NextRaceHeroCard (Collapsible)
+│   ├── RaceCountdown
+│   ├── QuickStats (4-column grid)
+│   ├── WeekendSchedule
+│   │   └── SessionRow (x5)
+│   └── CircuitDetails (2-column grid)
+│       ├── CircuitInfo
+│       └── TrackCharacteristics
+├── SeasonOverviewGrid
+│   └── WeekTile (x52)
+├── UpcomingRacesList
+│   └── UpcomingRaceCard (x3)
+└── SeasonResultsTable
+    └── ResultRow (x21)
+```
+
+### 4.2 TypeScript Interfaces
+
+```typescript
+// types/race.ts
+
+export interface Session {
+  track: string;  // Track timezone time
+  your: string;   // User's timezone time
+}
+
+export interface RaceSessions {
+  fp1: Session;
+  fp2: Session;
+  fp3: Session;
+  qualifying: Session;
+  race: Session;
+}
+
+export interface Race {
+  round: number;
+  name: string;
+  date: string;
+  circuit: string;
+  country: string;
+  flag: string;
+  countdown: string;
+  weather: string;
+  distance: string;
+  laps: number;
+  raceDistance: string;
+  elevation: string;
+  corners: number;
+  drsZones: number;
+  topSpeed: string;
+  lapRecord: string;
+  recordHolder: string;
+  difficulty: number;    // 1-5 stars
+  overtaking: number;    // 1-5 stars
+  weeksUntil: number;
+  sessions: RaceSessions;
+}
+
+export interface RaceResult {
+  round: number;
+  name: string;
+  flag: string;
+  circuit: string;
+  date: string;
+  winner: string;
+  p2: string;
+  p3: string;
+  pole: string;
+  fastestLap: string;
+  team1: string;
+  team2: string;
+  team3: string;
+}
+
+export interface WeekData {
+  week: number;
+  type: 'race' | 'upcoming' | 'break' | 'summer' | 'winter';
+  label: string;
+  round?: number;
+}
+
+export interface CalendarState {
+  nextRaceExpanded: boolean;
+  showAllResults: boolean;
+  userTimezone: string;
+}
+```
+
+---
+
+## 5. Layout Specifications
+
+### 5.1 Page Container
+
+```typescript
+// Main container specifications
+const pageContainer = {
+  maxWidth: '1280px',      // 7xl in Tailwind
+  padding: '1.5rem',       // 24px
+  margin: '0 auto',
+  backgroundColor: colors.primary.bg,
+  minHeight: '100vh',
+};
+
+const spacing = {
+  sectionGap: '1.5rem',    // 24px between major sections
+};
+```
+
+### 5.2 Page Header Component
+
+```typescript
+interface PageHeaderProps {
+  title: string;
+  subtitle: string;
+}
+
+// Specifications
+const headerSpec = {
+  container: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  
+  icon: {
+    size: '2.5rem',        // 40px
+    color: colors.accent.yellow,
+  },
+  
+  title: {
+    fontSize: typography.fontSize['4xl'],
+    fontWeight: typography.fontWeight.black,
+    color: colors.text.primary,
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  
+  subtitle: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
+  },
+};
+```
+
+### 5.3 Next Race Hero Card
+
+**Dimensions & Layout:**
+```typescript
+const nextRaceHeroSpec = {
+  container: {
+    position: 'relative',
+    overflow: 'hidden',
+    border: `1px solid ${colors.border.primary}`,
+    borderRadius: borderRadius['3xl'],
+    boxShadow: shadows['2xl'],
+    ring: `2px solid ${colors.accent.yellow}`,
+  },
+  
+  // USA Flag gradient background
+  background: {
+    layer1: {
+      position: 'absolute',
+      inset: 0,
+      background: 'linear-gradient(135deg, #1e3a8a 0%, #991b1b 50%, #1e3a8a 100%)',
+      opacity: 0.4,
+    },
+    layer2: {
+      position: 'absolute',
+      inset: 0,
+      background: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(220, 38, 38, 0.1) 20px, rgba(220, 38, 38, 0.1) 40px)',
+    },
+  },
+  
+  // Content container (relative to background)
+  content: {
+    position: 'relative',
+    zIndex: 1,
+  },
+  
+  // Header section
+  header: {
+    padding: '1.5rem 1.5rem 1rem',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  
+  // Title area
+  titleSection: {
+    flex: 1,
+  },
+  
+  badge: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+    fontWeight: typography.fontWeight.semibold,
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  
+  raceName: {
+    fontSize: {
+      mobile: typography.fontSize['5xl'],
+      desktop: typography.fontSize['6xl'],
+    },
+    fontWeight: typography.fontWeight.black,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
+  },
+  
+  circuit: {
+    fontSize: typography.fontSize.xl,
+    color: colors.text.secondary,
+  },
+  
+  // Countdown section
+  countdown: {
+    textAlign: 'right',
+  },
+  
+  countdownLabel: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+  },
+  
+  countdownValue: {
+    fontSize: {
+      mobile: typography.fontSize['4xl'],
+      desktop: typography.fontSize['5xl'],
+    },
+    fontWeight: typography.fontWeight.black,
+    color: colors.accent.yellow,
+    marginBottom: spacing.xs,
+  },
+  
+  date: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.secondary,
+  },
+  
+  // Collapse button
+  collapseButton: {
+    padding: spacing.sm,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'transparent',
+    hover: {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    transition: 'all 0.2s',
+  },
+};
+```
+
+**Quick Stats Grid:**
+```typescript
+const quickStatsSpec = {
+  container: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: spacing.md,
+    padding: '0 1.5rem',
+    marginBottom: spacing.xl,
+  },
+  
+  statCard: {
+    backgroundColor: colors.primary.cardBg,
+    borderRadius: borderRadius.xl,
+    padding: '1rem',
+    textAlign: 'center',
+    border: `1px solid ${colors.border.primary}`,
+    backdropFilter: 'blur(12px)',
+  },
+  
+  icon: {
+    width: '1.5rem',
+    height: '1.5rem',
+    color: colors.text.secondary,
+    margin: '0 auto 0.25rem',
+  },
+  
+  label: {
+    fontSize: typography.fontSize.xs,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+  },
+  
+  value: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+  },
+};
+```
+
+**Weekend Schedule:**
+```typescript
+const weekendScheduleSpec = {
+  container: {
+    backgroundColor: colors.primary.cardBg,
+    borderRadius: borderRadius['2xl'],
+    padding: '1.25rem',
+    border: `1px solid ${colors.border.primary}`,
+    backdropFilter: 'blur(12px)',
+    margin: '0 1.5rem',
+  },
+  
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1rem',
+  },
+  
+  title: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+  },
+  
+  exportButton: {
+    padding: '0.375rem 0.75rem',
+    backgroundColor: colors.accent.yellow,
+    color: '#000000',
+    borderRadius: borderRadius.lg,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+    hover: {
+      backgroundColor: colors.accent.yellowDark,
+    },
+    transition: 'all 0.2s',
+  },
+  
+  // Session row
+  sessionRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0.75rem',
+    borderRadius: borderRadius.lg,
+    marginBottom: spacing.sm,
+    
+    // Normal session
+    normal: {
+      backgroundColor: 'rgba(161, 98, 7, 0.05)',
+    },
+    
+    // Race session (highlighted)
+    race: {
+      backgroundColor: 'rgba(234, 179, 8, 0.3)',
+      ring: '1px solid ' + colors.accent.yellow,
+    },
+  },
+  
+  sessionName: {
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text.primary,
+    fontSize: typography.fontSize.sm,
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  
+  sessionIcon: {
+    width: '1rem',
+    height: '1rem',
+    
+    // Normal icon color
+    normal: colors.text.secondary,
+    
+    // Race icon color
+    race: colors.accent.yellow,
+  },
+  
+  timesContainer: {
+    display: 'flex',
+    gap: '2rem',
+    fontSize: typography.fontSize.xs,
+  },
+  
+  timeBlock: {
+    textAlign: 'right',
+  },
+  
+  timeLabel: {
+    color: colors.text.secondary,
+  },
+  
+  timeValue: {
+    fontWeight: typography.fontWeight.bold,
+    
+    // Normal time
+    normal: colors.text.primary,
+    
+    // Race time (highlighted)
+    race: colors.accent.yellow,
+  },
+};
+```
+
+**Circuit Details Grid:**
+```typescript
+const circuitDetailsSpec = {
+  container: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '1rem',
+    padding: '0 1.5rem 1.5rem',
+  },
+  
+  // Left column: Circuit Info
+  circuitInfo: {
+    title: {
+      fontSize: typography.fontSize.base,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+      marginBottom: spacing.md,
+    },
+    
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(2, 1fr)',
+      gap: spacing.sm,
+    },
+    
+    infoCard: {
+      backgroundColor: colors.primary.cardBg,
+      borderRadius: borderRadius.lg,
+      padding: spacing.sm,
+      border: `1px solid ${colors.border.primary}`,
+      backdropFilter: 'blur(12px)',
+    },
+    
+    label: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+    },
+    
+    value: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+    },
+  },
+  
+  // Right column: Track Characteristics
+  characteristics: {
+    container: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: spacing.sm,
+    },
+    
+    card: {
+      backgroundColor: colors.primary.cardBg,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      border: `1px solid ${colors.border.primary}`,
+      backdropFilter: 'blur(12px)',
+    },
+    
+    label: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+      marginBottom: spacing.xs,
+    },
+    
+    stars: {
+      display: 'flex',
+      gap: '0.125rem',
+    },
+    
+    star: {
+      width: '1rem',
+      height: '1rem',
+      
+      // Filled star (difficulty)
+      difficulty: {
+        filled: colors.accent.yellow,
+        empty: '#4b5563',
+      },
+      
+      // Filled star (overtaking)
+      overtaking: {
+        filled: '#22c55e',
+        empty: '#4b5563',
+      },
+    },
+  },
+};
+```
+
+### 5.4 Season Overview Grid
+
+```typescript
+const seasonOverviewSpec = {
+  container: {
+    backgroundColor: colors.primary.cardBg,
+    border: `1px solid ${colors.border.primary}`,
+    borderRadius: borderRadius['2xl'],
+    padding: '1.5rem',
+    boxShadow: shadows.xl,
+  },
+  
+  title: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: '1rem',
+  },
+  
+  titleIcon: {
+    width: '1.25rem',
+    height: '1.25rem',
+    color: colors.accent.yellow,
+  },
+  
+  // Grid layout: 4 rows of 13 weeks
+  grid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.375rem',  // 6px between rows
+  },
+  
+  row: {
+    display: 'flex',
+    gap: '0.375rem',  // 6px between tiles
+  },
+  
+  // Individual week tile
+  weekTile: {
+    flex: 1,
+    aspectRatio: '1/1',
+    borderRadius: borderRadius.md,
+    boxShadow: shadows.sm,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    cursor: 'pointer',
+    transition: 'transform 0.2s, z-index 0s',
+    
+    hover: {
+      transform: 'scale(1.25)',
+      zIndex: 10,
+    },
+    
+    // Color by type
+    colors: {
+      race: colors.status.completed,
+      upcoming: colors.status.upcoming,
+      break: colors.status.break,
+      summer: colors.status.summer,
+      winter: colors.status.winter,
+    },
+    
+    // Upcoming race has ring
+    upcomingRing: {
+      ring: `2px solid ${colors.accent.yellow}`,
+      ringOffset: '1px',
+      ringOffsetColor: '#1f2937',
+    },
+    
+    // Flag emoji for race weeks
+    flag: {
+      fontSize: typography.fontSize.lg,
+      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite', // For upcoming
+    },
+    
+    // Gradient overlay for break weeks
+    overlay: {
+      position: 'absolute',
+      inset: 0,
+      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent)',
+    },
+  },
+  
+  // Hover tooltip
+  tooltip: {
+    position: 'absolute',
+    top: '-4rem',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    opacity: 0,
+    pointerEvents: 'none',
+    zIndex: 50,
+    transition: 'opacity 0.2s',
+    
+    hover: {
+      opacity: 1,
+    },
+    
+    container: {
+      backgroundColor: '#000000',
+      border: `1px solid ${colors.accent.yellow}`,
+      borderRadius: borderRadius.lg,
+      padding: '0.375rem 0.625rem',
+      boxShadow: shadows['2xl'],
+      whiteSpace: 'nowrap',
+    },
+    
+    week: {
+      fontSize: typography.fontSize.xs,
+      color: colors.accent.yellow,
+      fontWeight: typography.fontWeight.bold,
+    },
+    
+    label: {
+      fontSize: typography.fontSize.sm,
+      color: colors.text.primary,
+      fontWeight: typography.fontWeight.semibold,
+    },
+    
+    round: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+      marginTop: '0.125rem',
+    },
+    
+    // Arrow pointing down
+    arrow: {
+      position: 'absolute',
+      bottom: 0,
+      left: '50%',
+      transform: 'translateX(-50%) translateY(100%)',
+      width: 0,
+      height: 0,
+      borderLeft: '3px solid transparent',
+      borderRight: '3px solid transparent',
+      borderTop: '3px solid #000000',
+    },
+  },
+  
+  // Legend
+  legend: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap',
+    marginTop: '1rem',
+    paddingTop: '0.75rem',
+    borderTop: `1px solid ${colors.border.primary}`,
+  },
+  
+  legendItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+  },
+  
+  legendSwatch: {
+    width: '1.25rem',
+    height: '1.25rem',
+    borderRadius: borderRadius.lg,
+    boxShadow: shadows.sm,
+  },
+  
+  legendLabel: {
+    fontSize: typography.fontSize.xs,
+    color: colors.text.secondary,
+  },
+};
+```
+
+### 5.5 Upcoming Races List
+
+```typescript
+const upcomingRacesSpec = {
+  container: {
+    backgroundColor: colors.primary.cardBg,
+    border: `1px solid ${colors.border.primary}`,
+    borderRadius: borderRadius['2xl'],
+    padding: '1.5rem',
+    boxShadow: shadows.xl,
+  },
+  
+  title: {
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: '1rem',
+  },
+  
+  titleIcon: {
+    width: '1.5rem',
+    height: '1.5rem',
+    color: colors.accent.yellow,
+  },
+  
+  raceList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spacing.md,
+  },
+  
+  // Individual race card
+  raceCard: {
+    backgroundColor: colors.primary.cardBg,
+    borderRadius: borderRadius.xl,
+    padding: '1.25rem',
+    border: `1px solid ${colors.border.primary}`,
+    transition: 'background-color 0.2s',
+    cursor: 'pointer',
+    
+    hover: {
+      backgroundColor: 'rgba(161, 98, 7, 0.2)',
+    },
+    
+    // First race (next race) has ring
+    nextRace: {
+      ring: `2px solid ${colors.accent.yellow}`,
+    },
+  },
+  
+  cardContent: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  
+  leftSection: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+  },
+  
+  roundBadge: {
+    backgroundColor: 'rgba(161, 98, 7, 0.2)',
+    borderRadius: borderRadius.lg,
+    padding: '1rem 1.25rem',
+    textAlign: 'center',
+    border: `1px solid ${colors.border.primary}`,
+  },
+  
+  roundLabel: {
+    fontSize: typography.fontSize.xs,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+  },
+  
+  roundNumber: {
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: typography.fontWeight.black,
+    color: colors.text.primary,
+  },
+  
+  flag: {
+    fontSize: typography.fontSize['5xl'],
+  },
+  
+  raceInfo: {
+    raceName: {
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+    },
+    
+    circuit: {
+      fontSize: typography.fontSize.sm,
+      color: colors.text.secondary,
+    },
+    
+    details: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: spacing.md,
+      marginTop: spacing.xs,
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+    },
+    
+    // Break indicator (orange text)
+    breakText: {
+      color: '#fb923c',
+      fontWeight: typography.fontWeight.semibold,
+    },
+  },
+  
+  rightSection: {
+    textAlign: 'right',
+  },
+  
+  raceTimeLabel: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+  },
+  
+  raceTimeValue: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+  },
+  
+  countdown: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+    justifyContent: 'flex-end',
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+    marginTop: spacing.sm,
+  },
+  
+  countdownIcon: {
+    width: '1rem',
+    height: '1rem',
+  },
+};
+```
+
+### 5.6 Season Results Table
+
+```typescript
+const seasonResultsSpec = {
+  container: {
+    backgroundColor: colors.primary.cardBg,
+    border: `1px solid ${colors.border.primary}`,
+    borderRadius: borderRadius['2xl'],
+    padding: '1.5rem',
+    boxShadow: shadows.xl,
+  },
+  
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1rem',
+  },
+  
+  title: {
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  
+  titleIcon: {
+    width: '1.5rem',
+    height: '1.5rem',
+    color: '#22c55e',
+  },
+  
+  toggleButton: {
+    padding: '0.5rem 1rem',
+    backgroundColor: 'rgba(161, 98, 7, 0.3)',
+    borderRadius: borderRadius.lg,
+    fontWeight: typography.fontWeight.semibold,
+    border: `1px solid ${colors.border.primary}`,
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+    transition: 'background-color 0.2s',
+    
+    hover: {
+      backgroundColor: 'rgba(161, 98, 7, 0.4)',
+    },
+  },
+  
+  // Table
+  table: {
+    width: '100%',
+    borderCollapse: 'separate',
+    borderSpacing: 0,
+  },
+  
+  tableHeader: {
+    row: {
+      borderBottom: `1px solid ${colors.border.primary}`,
+    },
+    
+    cell: {
+      textAlign: 'left',
+      padding: '0.75rem 1rem',
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semibold,
+      color: colors.text.secondary,
+    },
+  },
+  
+  tableBody: {
+    row: {
+      borderBottom: `1px solid rgba(161, 98, 7, 0.2)`,
+      transition: 'background-color 0.2s',
+      
+      hover: {
+        backgroundColor: 'rgba(161, 98, 7, 0.2)',
+      },
+    },
+    
+    cell: {
+      padding: '1rem',
+    },
+  },
+  
+  // Cell content styles
+  roundCell: {
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+  },
+  
+  gpCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+    
+    flag: {
+      fontSize: typography.fontSize['2xl'],
+    },
+    
+    name: {
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+    },
+    
+    circuit: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+    },
+  },
+  
+  dateCell: {
+    color: colors.text.secondary,
+  },
+  
+  driverCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+    
+    icon: {
+      width: '1rem',
+      height: '1rem',
+      
+      trophy: '#eab308',
+      star: '#eab308',
+      zap: '#a78bfa',
+    },
+    
+    name: {
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+    },
+    
+    team: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+    },
+  },
+};
+```
+
+---
+
+## 6. Data Models
+
+### 6.1 Java Backend Models
+
+```java
+// Race.java
+package com.f1hub.model;
+
+import lombok.Data;
+import lombok.Builder;
+import java.time.ZonedDateTime;
+import java.util.Map;
+
+@Data
+@Builder
+public class Race {
+    private Long id;
+    private Integer round;
+    private String name;
+    private String date;
+    private String circuit;
+    private String country;
+    private String flag;
+    private String countdown;
+    private String weather;
+    private String distance;
+    private Integer laps;
+    private String raceDistance;
+    private String elevation;
+    private Integer corners;
+    private Integer drsZones;
+    private String topSpeed;
+    private String lapRecord;
+    private String recordHolder;
+    private Integer difficulty;
+    private Integer overtaking;
+    private Integer weeksUntil;
+    private Map<String, Session> sessions;
+    private ZonedDateTime raceStartTime;
+}
+
+// Session.java
+package com.f1hub.model;
+
+import lombok.Data;
+import lombok.Builder;
+
+@Data
+@Builder
+public class Session {
+    private String track;  // Track timezone
+    private String your;   // User timezone
+}
+
+// RaceResult.java
+package com.f1hub.model;
+
+import lombok.Data;
+import lombok.Builder;
+
+@Data
+@Builder
+public class RaceResult {
+    private Long id;
+    private Integer round;
+    private String name;
+    private String flag;
+    private String circuit;
+    private String date;
+    private String winner;
+    private String p2;
+    private String p3;
+    private String pole;
+    private String fastestLap;
+    private String team1;
+    private String team2;
+    private String team3;
+}
+
+// WeekData.java
+package com.f1hub.model;
+
+import lombok.Data;
+import lombok.Builder;
+
+@Data
+@Builder
+public class WeekData {
+    private Integer week;
+    private WeekType type;
+    private String label;
+    private Integer round;
+}
+
+// WeekType.java
+package com.f1hub.model;
+
+public enum WeekType {
+    RACE,
+    UPCOMING,
+    BREAK,
+    SUMMER,
+    WINTER
+}
+```
+
+### 6.2 TypeScript Frontend Models
+
+```typescript
+// models/race.model.ts
+
+export interface Session {
+  track: string;
+  your: string;
+}
+
+export interface RaceSessions {
+  fp1: Session;
+  fp2: Session;
+  fp3: Session;
+  qualifying: Session;
+  race: Session;
+}
+
+export interface Race {
+  id?: number;
+  round: number;
+  name: string;
+  date: string;
+  circuit: string;
+  country: string;
+  flag: string;
+  countdown: string;
+  weather: string;
+  distance: string;
+  laps: number;
+  raceDistance: string;
+  elevation: string;
+  corners: number;
+  drsZones: number;
+  topSpeed: string;
+  lapRecord: string;
+  recordHolder: string;
+  difficulty: number;
+  overtaking: number;
+  weeksUntil: number;
+  sessions: RaceSessions;
+  raceStartTime?: Date;
+}
+
+export interface RaceResult {
+  id?: number;
+  round: number;
+  name: string;
+  flag: string;
+  circuit: string;
+  date: string;
+  winner: string;
+  p2: string;
+  p3: string;
+  pole: string;
+  fastestLap: string;
+  team1: string;
+  team2: string;
+  team3: string;
+}
+
+export type WeekType = 'race' | 'upcoming' | 'break' | 'summer' | 'winter';
+
+export interface WeekData {
+  week: number;
+  type: WeekType;
+  label: string;
+  round?: number;
+}
+
+export interface CalendarPageState {
+  nextRaceExpanded: boolean;
+  showAllResults: boolean;
+  userTimezone: string;
+}
+```
+
+---
+
+## 7. API Endpoints
+
+### 7.1 Backend API Specification (Java Spring Boot)
+
+```java
+// CalendarController.java
+package com.f1hub.controller;
+
+import com.f1hub.model.*;
+import com.f1hub.service.CalendarService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/calendar")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
+public class CalendarController {
+    
+    private final CalendarService calendarService;
+    
+    /**
+     * Get the next upcoming race with full details
+     * @param timezone User's timezone (e.g., "America/New_York")
+     * @return Next race with converted session times
+     */
+    @GetMapping("/next-race")
+    public Race getNextRace(@RequestParam String timezone) {
+        return calendarService.getNextRace(timezone);
+    }
+    
+    /**
+     * Get all upcoming races
+     * @param timezone User's timezone
+     * @return List of upcoming races
+     */
+    @GetMapping("/upcoming")
+    public List<Race> getUpcomingRaces(@RequestParam String timezone) {
+        return calendarService.getUpcomingRaces(timezone);
+    }
+    
+    /**
+     * Get all completed race results
+     * @return List of race results
+     */
+    @GetMapping("/results")
+    public List<RaceResult> getSeasonResults() {
+        return calendarService.getSeasonResults();
+    }
+    
+    /**
+     * Get 52-week calendar data
+     * @return Week-by-week breakdown of the season
+     */
+    @GetMapping("/season-overview")
+    public List<WeekData> getSeasonOverview() {
+        return calendarService.getSeasonOverview();
+    }
+    
+    /**
+     * Get specific race details
+     * @param round Race round number (1-24)
+     * @param timezone User's timezone
+     * @return Race details
+     */
+    @GetMapping("/race/{round}")
+    public Race getRaceByRound(
+        @PathVariable Integer round,
+        @RequestParam String timezone
+    ) {
+        return calendarService.getRaceByRound(round, timezone);
+    }
+}
+```
+
+### 7.2 Service Layer
+
+```java
+// CalendarService.java
+package com.f1hub.service;
+
+import com.f1hub.model.*;
+import com.f1hub.repository.RaceRepository;
+import com.f1hub.repository.RaceResultRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class CalendarService {
+    
+    private final RaceRepository raceRepository;
+    private final RaceResultRepository raceResultRepository;
+    private final TimezoneConverter timezoneConverter;
+    
+    @Cacheable(value = "nextRace", key = "#timezone")
+    public Race getNextRace(String timezone) {
+        Race race = raceRepository.findNextUpcomingRace();
+        return convertRaceTimezones(race, timezone);
+    }
+    
+    @Cacheable(value = "upcomingRaces", key = "#timezone")
+    public List<Race> getUpcomingRaces(String timezone) {
+        List<Race> races = raceRepository.findAllUpcoming();
+        return races.stream()
+            .map(race -> convertRaceTimezones(race, timezone))
+            .collect(Collectors.toList());
+    }
+    
+    @Cacheable("seasonResults")
+    public List<RaceResult> getSeasonResults() {
+        return raceResultRepository.findAllBySeasonOrderByRoundDesc(2024);
+    }
+    
+    @Cacheable("seasonOverview")
+    public List<WeekData> getSeasonOverview() {
+        // Generate 52-week calendar
+        return generateSeasonCalendar();
+    }
+    
+    public Race getRaceByRound(Integer round, String timezone) {
+        Race race = raceRepository.findByRound(round);
+        return convertRaceTimezones(race, timezone);
+    }
+    
+    private Race convertRaceTimezones(Race race, String userTimezone) {
+        ZoneId userZone = ZoneId.of(userTimezone);
+        
+        // Convert each session time
+        race.getSessions().forEach((sessionName, session) -> {
+            ZonedDateTime trackTime = ZonedDateTime.parse(session.getTrack());
+            ZonedDateTime userTime = trackTime.withZoneSameInstant(userZone);
+            
+            session.setYour(formatSessionTime(userTime));
+        });
+        
+        // Calculate countdown
+        race.setCountdown(calculateCountdown(race.getRaceStartTime()));
+        
+        return race;
+    }
+    
+    private String calculateCountdown(ZonedDateTime raceTime) {
+        // Calculate days, hours, minutes until race
+        // Return formatted string like "7d 14h 23m"
+        // Implementation details...
+    }
+    
+    private String formatSessionTime(ZonedDateTime time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE h:mm a z");
+        return time.format(formatter);
+    }
+    
+    private List<WeekData> generateSeasonCalendar() {
+        // Generate 52 weeks with race mappings
+        // Implementation details...
+    }
+}
+```
+
+### 7.3 Frontend API Service (TypeScript)
+
+```typescript
+// services/calendar.service.ts
+
+import axios from 'axios';
+import { Race, RaceResult, WeekData } from '../models/race.model';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
+
+class CalendarService {
+  
+  /**
+   * Get the next upcoming race
+   */
+  async getNextRace(timezone: string): Promise<Race> {
+    const response = await axios.get<Race>(`${API_BASE_URL}/calendar/next-race`, {
+      params: { timezone }
+    });
+    return response.data;
+  }
+  
+  /**
+   * Get all upcoming races
+   */
+  async getUpcomingRaces(timezone: string): Promise<Race[]> {
+    const response = await axios.get<Race[]>(`${API_BASE_URL}/calendar/upcoming`, {
+      params: { timezone }
+    });
+    return response.data;
+  }
+  
+  /**
+   * Get all season results
+   */
+  async getSeasonResults(): Promise<RaceResult[]> {
+    const response = await axios.get<RaceResult[]>(`${API_BASE_URL}/calendar/results`);
+    return response.data;
+  }
+  
+  /**
+   * Get 52-week season overview
+   */
+  async getSeasonOverview(): Promise<WeekData[]> {
+    const response = await axios.get<WeekData[]>(`${API_BASE_URL}/calendar/season-overview`);
+    return response.data;
+  }
+  
+  /**
+   * Get specific race by round
+   */
+  async getRaceByRound(round: number, timezone: string): Promise<Race> {
+    const response = await axios.get<Race>(`${API_BASE_URL}/calendar/race/${round}`, {
+      params: { timezone }
+    });
+    return response.data;
+  }
+}
+
+export default new CalendarService();
+```
+
+---
+
+## 8. State Management
+
+### 8.1 React State (TypeScript)
+
+```typescript
+// hooks/useCalendarState.ts
+
+import { useState, useEffect } from 'react';
+import { Race, RaceResult, WeekData } from '../models/race.model';
+import calendarService from '../services/calendar.service';
+
+export const useCalendarState = () => {
+  const [nextRaceExpanded, setNextRaceExpanded] = useState<boolean>(true);
+  const [showAllResults, setShowAllResults] = useState<boolean>(false);
+  const [userTimezone, setUserTimezone] = useState<string>('America/New_York');
+  
+  const [nextRace, setNextRace] = useState<Race | null>(null);
+  const [upcomingRaces, setUpcomingRaces] = useState<Race[]>([]);
+  const [seasonResults, setSeasonResults] = useState<RaceResult[]>([]);
+  const [seasonOverview, setSeasonOverview] = useState<WeekData[]>([]);
+  
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Load data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        const [next, upcoming, results, overview] = await Promise.all([
+          calendarService.getNextRace(userTimezone),
+          calendarService.getUpcomingRaces(userTimezone),
+          calendarService.getSeasonResults(),
+          calendarService.getSeasonOverview(),
+        ]);
+        
+        setNextRace(next);
+        setUpcomingRaces(upcoming);
+        setSeasonResults(results);
+        setSeasonOverview(overview);
+        
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load calendar data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [userTimezone]);
+  
+  return {
+    // State
+    nextRaceExpanded,
+    showAllResults,
+    userTimezone,
+    nextRace,
+    upcomingRaces,
+    seasonResults,
+    seasonOverview,
+    loading,
+    error,
+    
+    // Actions
+    setNextRaceExpanded,
+    setShowAllResults,
+    setUserTimezone,
+  };
+};
+```
+
+### 8.2 Component Implementation
+
+```typescript
+// pages/CalendarPage.tsx
+
+import React from 'react';
+import { useCalendarState } from '../hooks/useCalendarState';
+import PageHeader from '../components/calendar/PageHeader';
+import NextRaceHero from '../components/calendar/NextRaceHero';
+import SeasonOverview from '../components/calendar/SeasonOverview';
+import UpcomingRacesList from '../components/calendar/UpcomingRacesList';
+import SeasonResultsTable from '../components/calendar/SeasonResultsTable';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import ErrorMessage from '../components/common/ErrorMessage';
+
+const CalendarPage: React.FC = () => {
+  const {
+    nextRaceExpanded,
+    showAllResults,
+    userTimezone,
+    nextRace,
+    upcomingRaces,
+    seasonResults,
+    seasonOverview,
+    loading,
+    error,
+    setNextRaceExpanded,
+    setShowAllResults,
+  } = useCalendarState();
+  
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+  
+  if (error) {
+    return <ErrorMessage message={error} />;
+  }
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <PageHeader 
+          title="Race Calendar"
+          subtitle="2024 Season • 21 Complete • 3 Remaining"
+        />
+        
+        {nextRace && (
+          <NextRaceHero 
+            race={nextRace}
+            expanded={nextRaceExpanded}
+            onToggle={() => setNextRaceExpanded(!nextRaceExpanded)}
+          />
+        )}
+        
+        <SeasonOverview 
+          weeks={seasonOverview}
+          allResults={seasonResults}
+          upcomingRaces={upcomingRaces}
+        />
+        
+        <UpcomingRacesList races={upcomingRaces} />
+        
+        <SeasonResultsTable 
+          results={seasonResults}
+          showAll={showAllResults}
+          onToggle={() => setShowAllResults(!showAllResults)}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default CalendarPage;
+```
+
+---
+
+## 9. Responsive Behavior
+
+### 9.1 Breakpoints
+
+```typescript
+// constants/breakpoints.ts
+
+export const breakpoints = {
+  sm: '640px',
+  md: '768px',
+  lg: '1024px',
+  xl: '1280px',
+  '2xl': '1536px',
+};
+
+// Tailwind config
+module.exports = {
+  theme: {
+    screens: {
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px',
+    },
+  },
+};
+```
+
+### 9.2 Mobile Adaptations
+
+**Next Race Hero (Mobile):**
+```typescript
+const mobileNextRaceSpec = {
+  // Stack vertically on mobile
+  header: {
+    flexDirection: 'column',  // Stack title and countdown
+    alignItems: 'flex-start',
+  },
+  
+  raceName: {
+    fontSize: typography.fontSize['3xl'], // Smaller on mobile
+  },
+  
+  countdownSection: {
+    textAlign: 'left',  // Left-align on mobile
+    marginTop: spacing.md,
+  },
+  
+  quickStats: {
+    gridTemplateColumns: 'repeat(2, 1fr)', // 2 columns on mobile
+  },
+  
+  circuitDetails: {
+    gridTemplateColumns: '1fr', // Stack on mobile
+  },
+};
+```
+
+**Season Overview (Mobile):**
+```typescript
+const mobileSeasonOverviewSpec = {
+  // Reduce tile size on mobile
+  weekTile: {
+    minWidth: '1.5rem',  // Smaller tiles
+    minHeight: '1.5rem',
+  },
+  
+  flag: {
+    fontSize: typography.fontSize.sm, // Smaller flags
+  },
+};
+```
+
+**Upcoming Races (Mobile):**
+```typescript
+const mobileUpcomingRacesSpec = {
+  raceCard: {
+    flexDirection: 'column', // Stack content
+  },
+  
+  leftSection: {
+    width: '100%',
+  },
+  
+  rightSection: {
+    width: '100%',
+    textAlign: 'left',
+    marginTop: spacing.md,
+  },
+};
+```
+
+**Results Table (Mobile):**
+```typescript
+const mobileResultsTableSpec = {
+  // Convert to card layout on mobile
+  table: {
+    display: 'none', // Hide table
+  },
+  
+  // Show cards instead
+  mobileCards: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spacing.md,
+  },
+  
+  resultCard: {
+    backgroundColor: colors.primary.cardBg,
+    borderRadius: borderRadius.xl,
+    padding: '1rem',
+    border: `1px solid ${colors.border.primary}`,
+  },
+};
+```
+
+---
+
+## 10. Interactions & Animations
+
+### 10.1 Transitions
+
+```typescript
+// constants/transitions.ts
+
+export const transitions = {
+  fast: '150ms ease-in-out',
+  normal: '200ms ease-in-out',
+  slow: '300ms ease-in-out',
+  
+  properties: {
+    all: 'all',
+    colors: 'background-color, color, border-color',
+    transform: 'transform',
+    opacity: 'opacity',
+  },
+};
+```
+
+### 10.2 Animation Specifications
+
+**Pulse Animation (Upcoming Race Indicator):**
+```css
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+```
+
+**Hover Scale (Week Tiles):**
+```typescript
+const weekTileHover = {
+  transform: 'scale(1.25)',
+  transition: 'transform 0.2s ease-in-out',
+  zIndex: 10,
+};
+```
+
+**Collapse Animation (Next Race Card):**
+```typescript
+const collapseAnimation = {
+  expanded: {
+    maxHeight: '2000px',
+    opacity: 1,
+    transition: 'all 0.3s ease-in-out',
+  },
+  
+  collapsed: {
+    maxHeight: 0,
+    opacity: 0,
+    overflow: 'hidden',
+    transition: 'all 0.3s ease-in-out',
+  },
+};
+```
+
+**Tooltip Fade In:**
+```typescript
+const tooltipAnimation = {
+  initial: {
+    opacity: 0,
+    transform: 'translateY(4px)',
+  },
+  
+  hover: {
+    opacity: 1,
+    transform: 'translateY(0)',
+    transition: 'all 0.2s ease-out',
+  },
+};
+```
+
+### 10.3 User Interactions
+
+**Collapsible Next Race:**
+```typescript
+interface NextRaceProps {
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+// Click handler
+const handleToggle = () => {
+  setExpanded(!expanded);
+  // Optional: Save preference to localStorage
+  localStorage.setItem('nextRaceExpanded', (!expanded).toString());
+};
+```
+
+**Show All Results Toggle:**
+```typescript
+interface ResultsTableProps {
+  showAll: boolean;
+  onToggle: () => void;
+}
+
+// Click handler
+const handleShowAll = () => {
+  setShowAll(!showAll);
+};
+
+// Determine visible results
+const visibleResults = showAll ? allResults : allResults.slice(0, 6);
+```
+
+**Week Tile Hover:**
+```typescript
+// No click action required - just visual feedback
+// On hover:
+// 1. Scale up tile
+// 2. Show tooltip
+// 3. Bring to front (z-index)
+```
+
+**Export Calendar:**
+```typescript
+const handleExportCalendar = async () => {
+  // Generate ICS file from race data
+  const icsContent = generateICS(nextRace);
+  
+  // Trigger download
+  const blob = new Blob([icsContent], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `F1-${nextRace.name.replace(/\s+/g, '-')}.ics`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+```
+
+---
+
+## 11. Additional Implementation Notes
+
+### 11.1 Accessibility
+
+- All interactive elements must have proper ARIA labels
+- Color contrast ratios must meet WCAG AA standards (4.5:1 for normal text)
+- Keyboard navigation support for all interactive elements
+- Focus indicators on all clickable elements
+
+```typescript
+// Accessibility example
+<button
+  onClick={handleToggle}
+  aria-label={expanded ? "Collapse race details" : "Expand race details"}
+  aria-expanded={expanded}
+  className="focus:outline-none focus:ring-2 focus:ring-yellow-500"
+>
+  {/* Button content */}
+</button>
+```
+
+### 11.2 Performance Considerations
+
+- Implement virtual scrolling for large results table
+- Lazy load images/flags if using actual image files
+- Memoize expensive calculations (countdown, timezone conversions)
+- Use React.memo for child components that don't need frequent re-renders
+
+```typescript
+// Memoization example
+const NextRaceHero = React.memo(({ race, expanded, onToggle }: NextRaceHeroProps) => {
+  // Component implementation
+}, (prevProps, nextProps) => {
+  // Custom comparison
+  return prevProps.race.round === nextProps.race.round &&
+         prevProps.expanded === nextProps.expanded;
+});
+```
+
+### 11.3 Error Handling
+
+```typescript
+// Error boundary for calendar page
+class CalendarErrorBoundary extends React.Component {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log error to monitoring service
+    console.error('Calendar error:', error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <ErrorMessage 
+          title="Unable to load calendar"
+          message="Please try refreshing the page"
+        />
+      );
+    }
+    
+    return this.props.children;
+  }
+}
+```
+
+### 11.4 Testing Requirements
+
+**Unit Tests:**
+- Test timezone conversion logic
+- Test countdown calculation
+- Test week type determination
+- Test data transformations
+
+**Integration Tests:**
+- Test API endpoint responses
+- Test state management
+- Test component interactions
+
+**E2E Tests:**
+- Test page load and data display
+- Test collapse/expand functionality
+- Test show all results toggle
+- Test hover interactions
+
+---
+
+## 12. Deployment Checklist
+
+- [ ] Environment variables configured
+- [ ] API endpoints secured with authentication
+- [ ] CORS configured properly
+- [ ] Database migrations run
+- [ ] Redis cache configured
+- [ ] CDN configured for static assets
+- [ ] Error monitoring configured (e.g., Sentry)
+- [ ] Analytics integrated (if required)
+- [ ] Performance monitoring enabled
+- [ ] Accessibility audit passed
+- [ ] Cross-browser testing completed
+- [ ] Mobile responsiveness verified
+- [ ] Load testing completed
+
+---
+
+## 13. Appendix
+
+### 13.1 External Dependencies
+
+**Frontend:**
+```json
+{
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.0.0",
+    "tailwindcss": "^3.4.0",
+    "lucide-react": "^0.263.1",
+    "recharts": "^2.10.0",
+    "axios": "^1.6.0",
+    "date-fns": "^2.30.0"
+  }
+}
+```
+
+**Backend:**
+```xml
+<!-- pom.xml -->
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <version>3.2.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+        <version>3.2.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-cache</artifactId>
+        <version>3.2.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.30</version>
+    </dependency>
+</dependencies>
+```
+
+### 13.2 Future Enhancements
+
+- Live timing integration
+- Push notifications for race starts
+- Personal race reminders
+- Track weather updates
+- Driver/team filtering
+- Historical season comparison
+- Mobile app version
+
+---
+
+**Document End**
+
+For questions or clarifications, contact the product team.
