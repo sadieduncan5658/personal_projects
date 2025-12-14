@@ -1,0 +1,13 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@f1api/sdk": "^1.1.0",
+    "cors": "^2.8.5",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "tsx": "^4.21.0"
+  }
+}

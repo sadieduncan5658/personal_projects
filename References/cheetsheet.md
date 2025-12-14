@@ -158,6 +158,9 @@ For copy on select: in settings.json, add ```"copyOnSelect" = true```
 
 ---
 
+```python -m venv venv```
+```.\venv\Scriplsts\activate```
+
 ---
 
 Design Styles:
